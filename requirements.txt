@@ -1,4 +1,7 @@
 streamlit
 numpy
 matplotlib
-Pillow 
+Pillow
+plotly
+kaleido
+sympy 
