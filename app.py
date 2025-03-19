@@ -14,11 +14,9 @@ st.markdown("""
 This app solves the 1D heat equation with laser ablation as a heat source:
 
 $$\\frac{\\partial T}{\\partial t} = \\frac{k}{\\rho c_p}\\frac{\\partial^2 T}{\\partial x^2} + \\frac{I_0 e^{-\\alpha x}}{\\rho c_p}$$
-
-Adjust the parameters below to see how they affect the temperature distribution.
 """)
 
-# Create a sidebar for input parameters
+
 st.sidebar.header("Material Properties")
 k = st.sidebar.number_input("Thermal Conductivity k (W/m·K)", value=20.0)
 rho = st.sidebar.number_input("Density ρ (kg/m³)", value=8000.0)
@@ -45,7 +43,7 @@ simulation_time = st.sidebar.number_input("Total Simulation Time (s)", value=1.0
 dt_input = st.sidebar.number_input("Time Step (s)", value=0.001, format="%.5f")
 num_time_steps = int(simulation_time / dt_input)
 
-# Calculate stability criterion for explicit method
+# Stability Criteria
 dx = length / (nx - 1)
 stability_dt = 0.5 * dx**2 / diffusivity
 stability_status = "✅ Stable" if dt_input <= stability_dt else "❌ Unstable"
@@ -54,8 +52,7 @@ stability_color = "green" if dt_input <= stability_dt else "red"
 st.sidebar.markdown(f"<p style='color:{stability_color};'>Stability status: {stability_status}</p>", unsafe_allow_html=True)
 st.sidebar.markdown(f"Max stable time step: {stability_dt:.6f} s")
 
-# Define t_values outside the button click block
-# Initialize the spatial grid and solution arrays
+
 x = np.linspace(0, length, nx)
 T = np.ones(nx) * initial_temp
 T_history = np.zeros((num_time_steps + 1, nx))
@@ -63,15 +60,13 @@ T_history[0] = T.copy()
 t_values = np.linspace(0, simulation_time, num_time_steps + 1)
 
 def laser_source(x, I0, alpha):
-    """Calculate the laser heat source term."""
     if laser_on:
         return I0 * np.exp(-alpha * x) / (rho * c_p)
     else:
         return np.zeros_like(x)
 
 def solve_explicit_step(T, dx, dt, diffusivity, source):
-    """Solve one time step using explicit finite difference."""
-    T_new = T.copy()
+    T_new = T.copy() # -> Calculating the new temperature distribution
     
     # Interior points
     for i in range(1, nx-1):
@@ -114,7 +109,6 @@ if st.button("Run Simulation"):
     # Run the simulation
     simulation_running.text("Simulation running...")
     
-    # Temperature plot placeholder
     temp_plot = st.empty()
     
     # Update plots in real-time
@@ -219,6 +213,17 @@ with st.container():
     ax4.set_title('Temperature Evolution')
     fig4.colorbar(contour, ax=ax4, label='Temperature (K)')
     st.pyplot(fig4)
+
+# Add a plot for temperature vs. time at the left boundary
+with st.container():
+    st.subheader("Temperature vs. Time at Left Boundary")
+    fig5, ax5 = plt.subplots(figsize=(8, 5))
+    ax5.plot(t_values, T_history[:, 0], 'g-', linewidth=2)  # Index 0 for left boundary
+    ax5.set_xlabel('Time (s)')
+    ax5.set_ylabel('Temperature (K)')
+    ax5.set_title('Temperature Evolution at Left Boundary')
+    ax5.grid(True)
+    st.pyplot(fig5)
 
 # Add a footer with the user's name
 st.markdown("---")
